@@ -21,6 +21,7 @@ import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
 import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.PrefixNode;
@@ -29,20 +30,20 @@ import net.luckperms.api.node.types.PrefixNode;
 public class ChatSystemVelocity {
     private final ProxyServer proxy;
     private final MinecraftChannelIdentifier id;
-    private final LuckPerms lp;
+    private LuckPerms lp;
     private final Logger logger;
 
     @Inject
-    public ChatSystemVelocity(ProxyServer proxy, Logger logger, LuckPerms lp) {
+    public ChatSystemVelocity(ProxyServer proxy, Logger logger) {
         this.proxy = proxy;
         this.id = MinecraftChannelIdentifier.from("chatsystem:global");
         this.logger = logger;
-        this.lp = lp;
     }
 
     @Subscribe
     public void onProxyEnable(ProxyInitializeEvent event) {
         proxy.getChannelRegistrar().register(id);
+        lp = LuckPermsProvider.get();
     }
 
     @Subscribe
