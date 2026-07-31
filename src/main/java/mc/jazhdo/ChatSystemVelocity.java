@@ -23,7 +23,7 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
 
-@Plugin(id = "chat-system-velocity", name = "ChatSystemVelocity", version = "0.1.1", dependencies = { @Dependency(id = "luckperms") })
+@Plugin(id = "chat-system-velocity", name = "ChatSystemVelocity", version = "0.1.2", dependencies = { @Dependency(id = "luckperms") })
 public class ChatSystemVelocity {
     private final ProxyServer proxy;
     private final MinecraftChannelIdentifier id;
@@ -60,15 +60,12 @@ public class ChatSystemVelocity {
         }
         User user = lp.getPlayerAdapter(Player.class).getUser(player.get());
 
-        // Get the prefix with highest priority
-
         // Create new data stream to send to each plugin
         ByteArrayDataOutput data = ByteStreams.newDataOutput();
-        data.writeUTF(user.getCachedData().getMetaData(lp.getContextManager().getQueryOptions(player.get())).getPrefix() + "<" + playerName + ">: " + msg);
+        data.writeUTF(user.getCachedData().getMetaData(lp.getContextManager().getQueryOptions(player.get())).getPrefix() + " <" + playerName + ">: " + msg);
 
         // Broadcast chat message globally
         if (event.getSource() instanceof ServerConnection) for (RegisteredServer server : proxy.getAllServers()) if (!server.getPlayersConnected().isEmpty()) server.sendPluginMessage(id, data.toByteArray());
-        else logger.log(Level.WARNING, "A plugin messaging event''s source ({0}) is not a server connection.", event.getSource().toString());
 
         // Prevent packet bouncing
         event.setResult(PluginMessageEvent.ForwardResult.handled());
