@@ -19,6 +19,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
@@ -27,7 +28,7 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.context.ContextManager;
 
-@Plugin(id = "chat-system-velocity", name = "ChatSystemVelocity", version = "0.1.3", dependencies = { @Dependency(id = "luckperms") })
+@Plugin(id = "chat-system-velocity", name = "ChatSystemVelocity", version = "0.1.4", dependencies = { @Dependency(id = "luckperms") })
 public class ChatSystemVelocity {
     private final ProxyServer proxy;
     private final MinecraftChannelIdentifier global, single;
@@ -84,9 +85,13 @@ public class ChatSystemVelocity {
 
         // Get the player to format it with their prefix
         Optional<Player> player = proxy.getPlayer(playerName);
-        Player p = player.get();
-        if (player.isPresent()) broadcastGlobalWithoutProfanity(p, lp.getPlayerAdapter(Player.class).getUser(p).getCachedData().getMetaData(cm.getQueryOptions(p)).getPrefixes() + " <" + playerName + ">: " + msg);
-        else logger.log(Level.WARNING, "Player {0} could not be found by the proxy. Message \"{1}\" will not be sent to global chat.", new String[]{playerName, msg});
+        if (player.isPresent()) {
+            ChannelMessageSource source = event.getSource();
+            if (source instanceof ServerConnection connection) {
+                Player p = player.get();
+                broadcastGlobalWithoutProfanity(p, "[" + connection.getServerInfo().getName() + "] " + lp.getPlayerAdapter(Player.class).getUser(p).getCachedData().getMetaData(cm.getQueryOptions(p)).getPrefix() + " <" + playerName + ">: " + msg);
+            } else logger.log(Level.WARNING, "PluginMessageEvent source {0} was not a ServerConnection.", source.toString());
+        } else logger.log(Level.WARNING, "Player {0} could not be found by the proxy. Message \"{1}\" will not be sent to global chat.", new String[]{playerName, msg});
 
         // Prevent packet bouncing
         event.setResult(PluginMessageEvent.ForwardResult.handled());
@@ -109,13 +114,12 @@ public class ChatSystemVelocity {
 
     private void sendSingle(Player player, String msg) {
         // Build data stream
-        String playerName = player.getUsername();
         ByteArrayDataOutput data = ByteStreams.newDataOutput();
-        data.writeUTF(playerName);
+        data.writeUTF(player.getUsername());
         data.writeUTF(msg);
 
-        Optional<Player> maybePlayer = proxy.getPlayer(playerName);
-        if (maybePlayer.isPresent()) maybePlayer.get().sendPluginMessage(single, data.toByteArray());
+        // Send message
+        player.sendPluginMessage(single, data.toByteArray());
     }
 
     private boolean hasProfanity(Player player, String msg) {
