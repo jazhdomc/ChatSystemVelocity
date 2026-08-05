@@ -88,12 +88,10 @@ public class ChatSystemVelocity {
         Optional<Player> player = proxy.getPlayer(playerName);
         if (player.isPresent()) {
             ChannelMessageSource source = event.getSource();
-            if (source == null) {
-                if (source instanceof ServerConnection connection) {
-                    Player p = player.get();
-                    broadcastGlobalWithoutProfanity(p, "[" + connection.getServerInfo().getName() + "] " + lp.getPlayerAdapter(Player.class).getUser(p).getCachedData().getMetaData(cm.getQueryOptions(p)).getPrefix() + "&f <" + playerName + ">: " + msg);
-                } else logger.log(Level.WARNING, "PluginMessageEvent source {0} was not a ServerConnection.", source.toString());
-            } else logger.log(Level.WARNING, "A chat message from player {0} with message \"{1}\" had a null source.", new String[]{playerName, msg});
+            if (source instanceof ServerConnection connection) {
+                Player p = player.get();
+                broadcastGlobalWithoutProfanity(p, "[" + connection.getServerInfo().getName() + "] " + lp.getPlayerAdapter(Player.class).getUser(p).getCachedData().getMetaData(cm.getQueryOptions(p)).getPrefix() + "&f <" + playerName + ">: " + msg);
+            } else logger.log(Level.WARNING, "PluginMessageEvent source {0} was not a ServerConnection.", source.toString());
         } else logger.log(Level.WARNING, "Player {0} could not be found by the proxy. Message \"{1}\" will not be sent to global chat.", new String[]{playerName, msg});
 
         // Prevent packet bouncing
